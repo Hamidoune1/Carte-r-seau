@@ -1,0 +1,1 @@
+var json_vanneventouse_16 = {"type":"FeatureCollection","name":"vanneventouse_16","crs":{"type":"name","properties":{"name":"urn:ogc:def:crs:OGC:1.3:CRS84"}},"features":[]}

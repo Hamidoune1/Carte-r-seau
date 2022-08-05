@@ -1,0 +1,1438 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="stylesheet" href="css/leaflet.css"><link rel="stylesheet" href="css/L.Control.Locate.min.css">
+        <link rel="stylesheet" href="css/qgis2web.css"><link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <link rel="stylesheet" href="css/leaflet-control-geocoder.Geocoder.css">
+        <link rel="stylesheet" href="css/leaflet-measure.css">
+        <style>
+        html, body, #map {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+        </style>
+        <title></title>
+    </head>
+    <body>
+        <div id="map">
+        </div>
+        <script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script><script src="js/L.Control.Locate.min.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="js/leaflet.wms.js"></script>
+        <script src="js/leaflet-control-geocoder.Geocoder.js"></script>
+        <script src="js/leaflet-measure.js"></script>
+        <script src="js/proj4.js"></script>
+        <script src="js/proj4leaflet.js"></script>
+        <script src="data/poteauincendie_1.js"></script>
+        <script src="data/reserveincendie_2.js"></script>
+        <script src="data/vannePI_3.js"></script>
+        <script src="data/Adduction_4.js"></script>
+        <script src="data/Distribution_5.js"></script>
+        <script src="data/Intercommunal_6.js"></script>
+        <script src="data/Branchements_7.js"></script>
+        <script src="data/robinetarret_8.js"></script>
+        <script src="data/manchon_9.js"></script>
+        <script src="data/manchonderaccordement_10.js"></script>
+        <script src="data/bouchon_11.js"></script>
+        <script src="data/vanneinversee_12.js"></script>
+        <script src="data/vannepurge_13.js"></script>
+        <script src="data/vannedesectionnement_14.js"></script>
+        <script src="data/vannedebranchement_15.js"></script>
+        <script src="data/vanneventouse_16.js"></script>
+        <script src="data/compteurdetete_17.js"></script>
+        <script src="data/compteurdebranchement_18.js"></script>
+        <script src="data/compteurparc_19.js"></script>
+        <script src="data/captagesource_20.js"></script>
+        <script src="data/regardcompteur_21.js"></script>
+        <script src="data/stationdepompage_22.js"></script>
+        <script src="data/surpresseur_23.js"></script>
+        <script src="data/ventouse_24.js"></script>
+        <script src="data/purge_25.js"></script>
+        <script src="data/reservoir_26.js"></script>
+        <script>
+        var highlightLayer;
+        function highlightFeature(e) {
+            highlightLayer = e.target;
+
+            if (e.target.feature.geometry.type === 'LineString') {
+              highlightLayer.setStyle({
+                color: '#ffff00',
+              });
+            } else {
+              highlightLayer.setStyle({
+                fillColor: '#ffff00',
+                fillOpacity: 1
+              });
+            }
+            highlightLayer.openPopup();
+        }
+        var crs = new L.Proj.CRS('EPSG:3857', '+proj=merc +a=6378137 +b=6378137 +lat_ts=0 +lon_0=0 +x_0=0 +y_0=0 +k=1 +units=m +nadgrids=@null +wktext +no_defs', {
+            resolutions: [2800, 1400, 700, 350, 175, 84, 42, 21, 11.2, 5.6, 2.8, 1.4, 0.7, 0.35, 0.14, 0.07],
+        });
+        var map = L.map('map', {
+            crs: crs,
+            continuousWorld: false,
+            worldCopyJump: false, 
+            zoomControl:true, maxZoom:28, minZoom:1
+        }).fitBounds([[49.10171482719744,5.740125345209889],[49.10259666242687,5.742227284505334]]);
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        L.control.locate({locateOptions: {maxZoom: 19}}).addTo(map);
+        var measureControl = new L.Control.Measure({
+            position: 'topleft',
+            primaryLengthUnit: 'meters',
+            secondaryLengthUnit: 'kilometers',
+            primaryAreaUnit: 'sqmeters',
+            secondaryAreaUnit: 'hectares'
+        });
+        measureControl.addTo(map);
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0]
+        .innerHTML = '';
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0]
+        .className += ' fas fa-ruler';
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+            map.setMaxBounds(map.getBounds());
+        }
+        map.createPane('pane_VueariennedeMeuse552018_0');
+        map.getPane('pane_VueariennedeMeuse552018_0').style.zIndex = 400;
+        var layer_VueariennedeMeuse552018_0 = L.WMS.layer("https://www.datagrandest.fr/geoserver/geograndest/ows", "GGE_ORTHORVB_2018_55_TIF_L93", {
+            pane: 'pane_VueariennedeMeuse552018_0',
+            format: 'image/png',
+            uppercase: true,
+            transparent: true,
+            continuousWorld : true,
+            tiled: true,
+            info_format: 'text/html',
+            opacity: 1,
+            identify: false,
+            attribution: '',
+        });
+        map.addLayer(layer_VueariennedeMeuse552018_0);
+        function pop_poteauincendie_1(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+        }
+
+        function style_poteauincendie_1_0() {
+            return {
+                pane: 'pane_poteauincendie_1',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/Poteau_Incendie.svg',
+            iconSize: [7.6, 7.6]
+        }),
+                interactive: true,
+            }
+        }
+        map.createPane('pane_poteauincendie_1');
+        map.getPane('pane_poteauincendie_1').style.zIndex = 401;
+        map.getPane('pane_poteauincendie_1').style['mix-blend-mode'] = 'normal';
+        var layer_poteauincendie_1 = new L.geoJson(json_poteauincendie_1, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_poteauincendie_1',
+            layerName: 'layer_poteauincendie_1',
+            pane: 'pane_poteauincendie_1',
+            onEachFeature: pop_poteauincendie_1,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.marker(latlng, style_poteauincendie_1_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_poteauincendie_1);
+        map.addLayer(layer_poteauincendie_1);
+        function pop_reserveincendie_2(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+        }
+
+        function style_reserveincendie_2_0() {
+            return {
+                pane: 'pane_reserveincendie_2',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/AEP_BOUCHE_INCENDIE.svg',
+            iconSize: [7.6, 7.6]
+        }),
+                interactive: true,
+            }
+        }
+        map.createPane('pane_reserveincendie_2');
+        map.getPane('pane_reserveincendie_2').style.zIndex = 402;
+        map.getPane('pane_reserveincendie_2').style['mix-blend-mode'] = 'normal';
+        var layer_reserveincendie_2 = new L.geoJson(json_reserveincendie_2, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_reserveincendie_2',
+            layerName: 'layer_reserveincendie_2',
+            pane: 'pane_reserveincendie_2',
+            onEachFeature: pop_reserveincendie_2,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.marker(latlng, style_reserveincendie_2_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_reserveincendie_2);
+        map.addLayer(layer_reserveincendie_2);
+        function pop_vannePI_3(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+        }
+
+        function style_vannePI_3_0() {
+            return {
+                pane: 'pane_vannePI_3',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/AEP_VANNES_RESEAU.svg',
+            iconSize: [7.6, 7.6]
+        }),
+                interactive: true,
+            }
+        }
+        map.createPane('pane_vannePI_3');
+        map.getPane('pane_vannePI_3').style.zIndex = 403;
+        map.getPane('pane_vannePI_3').style['mix-blend-mode'] = 'normal';
+        var layer_vannePI_3 = new L.geoJson(json_vannePI_3, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_vannePI_3',
+            layerName: 'layer_vannePI_3',
+            pane: 'pane_vannePI_3',
+            onEachFeature: pop_vannePI_3,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.marker(latlng, style_vannePI_3_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_vannePI_3);
+        map.addLayer(layer_vannePI_3);
+        function pop_Adduction_4(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+        }
+
+        function style_Adduction_4_0() {
+            return {
+                pane: 'pane_Adduction_4',
+                opacity: 1,
+                color: 'rgba(231,113,72,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_Adduction_4');
+        map.getPane('pane_Adduction_4').style.zIndex = 404;
+        map.getPane('pane_Adduction_4').style['mix-blend-mode'] = 'normal';
+        var layer_Adduction_4 = new L.geoJson(json_Adduction_4, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Adduction_4',
+            layerName: 'layer_Adduction_4',
+            pane: 'pane_Adduction_4',
+            onEachFeature: pop_Adduction_4,
+            style: style_Adduction_4_0,
+        });
+        bounds_group.addLayer(layer_Adduction_4);
+        map.addLayer(layer_Adduction_4);
+        function pop_Distribution_5(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+        }
+
+        function style_Distribution_5_0() {
+            return {
+                pane: 'pane_Distribution_5',
+                opacity: 1,
+                color: 'rgba(11,152,246,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 2.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_Distribution_5');
+        map.getPane('pane_Distribution_5').style.zIndex = 405;
+        map.getPane('pane_Distribution_5').style['mix-blend-mode'] = 'normal';
+        var layer_Distribution_5 = new L.geoJson(json_Distribution_5, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Distribution_5',
+            layerName: 'layer_Distribution_5',
+            pane: 'pane_Distribution_5',
+            onEachFeature: pop_Distribution_5,
+            style: style_Distribution_5_0,
+        });
+        bounds_group.addLayer(layer_Distribution_5);
+        map.addLayer(layer_Distribution_5);
+        function pop_Intercommunal_6(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+        }
+
+        function style_Intercommunal_6_0() {
+            return {
+                pane: 'pane_Intercommunal_6',
+                opacity: 1,
+                color: 'rgba(12,36,246,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 3.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_Intercommunal_6');
+        map.getPane('pane_Intercommunal_6').style.zIndex = 406;
+        map.getPane('pane_Intercommunal_6').style['mix-blend-mode'] = 'normal';
+        var layer_Intercommunal_6 = new L.geoJson(json_Intercommunal_6, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Intercommunal_6',
+            layerName: 'layer_Intercommunal_6',
+            pane: 'pane_Intercommunal_6',
+            onEachFeature: pop_Intercommunal_6,
+            style: style_Intercommunal_6_0,
+        });
+        bounds_group.addLayer(layer_Intercommunal_6);
+        map.addLayer(layer_Intercommunal_6);
+        function pop_Branchements_7(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+        }
+
+        function style_Branchements_7_0() {
+            return {
+                pane: 'pane_Branchements_7',
+                opacity: 1,
+                color: 'rgba(16,241,244,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_Branchements_7');
+        map.getPane('pane_Branchements_7').style.zIndex = 407;
+        map.getPane('pane_Branchements_7').style['mix-blend-mode'] = 'normal';
+        var layer_Branchements_7 = new L.geoJson(json_Branchements_7, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Branchements_7',
+            layerName: 'layer_Branchements_7',
+            pane: 'pane_Branchements_7',
+            onEachFeature: pop_Branchements_7,
+            style: style_Branchements_7_0,
+        });
+        bounds_group.addLayer(layer_Branchements_7);
+        map.addLayer(layer_Branchements_7);
+        function pop_robinetarret_8(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+        }
+
+        function style_robinetarret_8_0() {
+            return {
+                pane: 'pane_robinetarret_8',
+                radius: 4.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(213,180,60,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_robinetarret_8');
+        map.getPane('pane_robinetarret_8').style.zIndex = 408;
+        map.getPane('pane_robinetarret_8').style['mix-blend-mode'] = 'normal';
+        var layer_robinetarret_8 = new L.geoJson(json_robinetarret_8, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_robinetarret_8',
+            layerName: 'layer_robinetarret_8',
+            pane: 'pane_robinetarret_8',
+            onEachFeature: pop_robinetarret_8,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_robinetarret_8_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_robinetarret_8);
+        map.addLayer(layer_robinetarret_8);
+        function pop_manchon_9(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+        }
+
+        function style_manchon_9_0() {
+            return {
+                pane: 'pane_manchon_9',
+                radius: 4.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(183,72,75,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_manchon_9');
+        map.getPane('pane_manchon_9').style.zIndex = 409;
+        map.getPane('pane_manchon_9').style['mix-blend-mode'] = 'normal';
+        var layer_manchon_9 = new L.geoJson(json_manchon_9, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_manchon_9',
+            layerName: 'layer_manchon_9',
+            pane: 'pane_manchon_9',
+            onEachFeature: pop_manchon_9,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_manchon_9_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_manchon_9);
+        map.addLayer(layer_manchon_9);
+        function pop_manchonderaccordement_10(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+        }
+
+        function style_manchonderaccordement_10_0() {
+            return {
+                pane: 'pane_manchonderaccordement_10',
+                radius: 4.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(231,113,72,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_manchonderaccordement_10');
+        map.getPane('pane_manchonderaccordement_10').style.zIndex = 410;
+        map.getPane('pane_manchonderaccordement_10').style['mix-blend-mode'] = 'normal';
+        var layer_manchonderaccordement_10 = new L.geoJson(json_manchonderaccordement_10, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_manchonderaccordement_10',
+            layerName: 'layer_manchonderaccordement_10',
+            pane: 'pane_manchonderaccordement_10',
+            onEachFeature: pop_manchonderaccordement_10,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_manchonderaccordement_10_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_manchonderaccordement_10);
+        map.addLayer(layer_manchonderaccordement_10);
+        function pop_bouchon_11(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+        }
+
+        function style_bouchon_11_0() {
+            return {
+                pane: 'pane_bouchon_11',
+                radius: 4.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(190,178,151,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_bouchon_11');
+        map.getPane('pane_bouchon_11').style.zIndex = 411;
+        map.getPane('pane_bouchon_11').style['mix-blend-mode'] = 'normal';
+        var layer_bouchon_11 = new L.geoJson(json_bouchon_11, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_bouchon_11',
+            layerName: 'layer_bouchon_11',
+            pane: 'pane_bouchon_11',
+            onEachFeature: pop_bouchon_11,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_bouchon_11_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_bouchon_11);
+        map.addLayer(layer_bouchon_11);
+        function pop_vanneinversee_12(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+        }
+
+        function style_vanneinversee_12_0() {
+            return {
+                pane: 'pane_vanneinversee_12',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/AEP_VANNES_RESEAU.svg',
+            iconSize: [7.6, 7.6]
+        }),
+                interactive: true,
+            }
+        }
+        map.createPane('pane_vanneinversee_12');
+        map.getPane('pane_vanneinversee_12').style.zIndex = 412;
+        map.getPane('pane_vanneinversee_12').style['mix-blend-mode'] = 'normal';
+        var layer_vanneinversee_12 = new L.geoJson(json_vanneinversee_12, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_vanneinversee_12',
+            layerName: 'layer_vanneinversee_12',
+            pane: 'pane_vanneinversee_12',
+            onEachFeature: pop_vanneinversee_12,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.marker(latlng, style_vanneinversee_12_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_vanneinversee_12);
+        map.addLayer(layer_vanneinversee_12);
+        function pop_vannepurge_13(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+        }
+
+        function style_vannepurge_13_0() {
+            return {
+                pane: 'pane_vannepurge_13',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/AEP_VANNES_RESEAU.svg',
+            iconSize: [7.6, 7.6]
+        }),
+                interactive: true,
+            }
+        }
+        map.createPane('pane_vannepurge_13');
+        map.getPane('pane_vannepurge_13').style.zIndex = 413;
+        map.getPane('pane_vannepurge_13').style['mix-blend-mode'] = 'normal';
+        var layer_vannepurge_13 = new L.geoJson(json_vannepurge_13, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_vannepurge_13',
+            layerName: 'layer_vannepurge_13',
+            pane: 'pane_vannepurge_13',
+            onEachFeature: pop_vannepurge_13,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.marker(latlng, style_vannepurge_13_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_vannepurge_13);
+        map.addLayer(layer_vannepurge_13);
+        function pop_vannedesectionnement_14(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+        }
+
+        function style_vannedesectionnement_14_0() {
+            return {
+                pane: 'pane_vannedesectionnement_14',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/AEP_VANNES_RESEAU.svg',
+            iconSize: [13.68, 13.68]
+        }),
+                interactive: true,
+            }
+        }
+        map.createPane('pane_vannedesectionnement_14');
+        map.getPane('pane_vannedesectionnement_14').style.zIndex = 414;
+        map.getPane('pane_vannedesectionnement_14').style['mix-blend-mode'] = 'normal';
+        var layer_vannedesectionnement_14 = new L.geoJson(json_vannedesectionnement_14, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_vannedesectionnement_14',
+            layerName: 'layer_vannedesectionnement_14',
+            pane: 'pane_vannedesectionnement_14',
+            onEachFeature: pop_vannedesectionnement_14,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.marker(latlng, style_vannedesectionnement_14_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_vannedesectionnement_14);
+        map.addLayer(layer_vannedesectionnement_14);
+        function pop_vannedebranchement_15(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+        }
+
+        function style_vannedebranchement_15_0() {
+            return {
+                pane: 'pane_vannedebranchement_15',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/AEP_VANNES_RESEAU.svg',
+            iconSize: [7.6, 7.6]
+        }),
+                interactive: true,
+            }
+        }
+        map.createPane('pane_vannedebranchement_15');
+        map.getPane('pane_vannedebranchement_15').style.zIndex = 415;
+        map.getPane('pane_vannedebranchement_15').style['mix-blend-mode'] = 'normal';
+        var layer_vannedebranchement_15 = new L.geoJson(json_vannedebranchement_15, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_vannedebranchement_15',
+            layerName: 'layer_vannedebranchement_15',
+            pane: 'pane_vannedebranchement_15',
+            onEachFeature: pop_vannedebranchement_15,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.marker(latlng, style_vannedebranchement_15_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_vannedebranchement_15);
+        map.addLayer(layer_vannedebranchement_15);
+        function pop_vanneventouse_16(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+        }
+
+        function style_vanneventouse_16_0() {
+            return {
+                pane: 'pane_vanneventouse_16',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/AEP_VANNES_RESEAU.svg',
+            iconSize: [7.6, 7.6]
+        }),
+                interactive: true,
+            }
+        }
+        map.createPane('pane_vanneventouse_16');
+        map.getPane('pane_vanneventouse_16').style.zIndex = 416;
+        map.getPane('pane_vanneventouse_16').style['mix-blend-mode'] = 'normal';
+        var layer_vanneventouse_16 = new L.geoJson(json_vanneventouse_16, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_vanneventouse_16',
+            layerName: 'layer_vanneventouse_16',
+            pane: 'pane_vanneventouse_16',
+            onEachFeature: pop_vanneventouse_16,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.marker(latlng, style_vanneventouse_16_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_vanneventouse_16);
+        map.addLayer(layer_vanneventouse_16);
+        function pop_compteurdetete_17(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+        }
+
+        function style_compteurdetete_17_0() {
+            return {
+                pane: 'pane_compteurdetete_17',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/Compteur_Secto.svg',
+            iconSize: [9.657357999999999, 9.657357999999999]
+        }),
+                interactive: true,
+            }
+        }
+        map.createPane('pane_compteurdetete_17');
+        map.getPane('pane_compteurdetete_17').style.zIndex = 417;
+        map.getPane('pane_compteurdetete_17').style['mix-blend-mode'] = 'normal';
+        var layer_compteurdetete_17 = new L.geoJson(json_compteurdetete_17, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_compteurdetete_17',
+            layerName: 'layer_compteurdetete_17',
+            pane: 'pane_compteurdetete_17',
+            onEachFeature: pop_compteurdetete_17,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.marker(latlng, style_compteurdetete_17_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_compteurdetete_17);
+        map.addLayer(layer_compteurdetete_17);
+        function pop_compteurdebranchement_18(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+        }
+
+        function style_compteurdebranchement_18_0() {
+            return {
+                pane: 'pane_compteurdebranchement_18',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/AEP_COMPTEUR_BRANCHEMENT.svg',
+            iconSize: [7.6, 7.6]
+        }),
+                interactive: true,
+            }
+        }
+        map.createPane('pane_compteurdebranchement_18');
+        map.getPane('pane_compteurdebranchement_18').style.zIndex = 418;
+        map.getPane('pane_compteurdebranchement_18').style['mix-blend-mode'] = 'normal';
+        var layer_compteurdebranchement_18 = new L.geoJson(json_compteurdebranchement_18, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_compteurdebranchement_18',
+            layerName: 'layer_compteurdebranchement_18',
+            pane: 'pane_compteurdebranchement_18',
+            onEachFeature: pop_compteurdebranchement_18,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.marker(latlng, style_compteurdebranchement_18_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_compteurdebranchement_18);
+        map.addLayer(layer_compteurdebranchement_18);
+        function pop_compteurparc_19(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+        }
+
+        function style_compteurparc_19_0() {
+            return {
+                pane: 'pane_compteurparc_19',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/AEP_COMPTEUR_BRANCHEMENT.svg',
+            iconSize: [7.6, 7.6]
+        }),
+                interactive: true,
+            }
+        }
+        map.createPane('pane_compteurparc_19');
+        map.getPane('pane_compteurparc_19').style.zIndex = 419;
+        map.getPane('pane_compteurparc_19').style['mix-blend-mode'] = 'normal';
+        var layer_compteurparc_19 = new L.geoJson(json_compteurparc_19, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_compteurparc_19',
+            layerName: 'layer_compteurparc_19',
+            pane: 'pane_compteurparc_19',
+            onEachFeature: pop_compteurparc_19,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.marker(latlng, style_compteurparc_19_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_compteurparc_19);
+        map.addLayer(layer_compteurparc_19);
+        function pop_captagesource_20(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+        }
+
+        function style_captagesource_20_0() {
+            return {
+                pane: 'pane_captagesource_20',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/Captage.svg',
+            iconSize: [9.879999999999999, 9.879999999999999]
+        }),
+                interactive: true,
+            }
+        }
+        map.createPane('pane_captagesource_20');
+        map.getPane('pane_captagesource_20').style.zIndex = 420;
+        map.getPane('pane_captagesource_20').style['mix-blend-mode'] = 'normal';
+        var layer_captagesource_20 = new L.geoJson(json_captagesource_20, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_captagesource_20',
+            layerName: 'layer_captagesource_20',
+            pane: 'pane_captagesource_20',
+            onEachFeature: pop_captagesource_20,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.marker(latlng, style_captagesource_20_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_captagesource_20);
+        map.addLayer(layer_captagesource_20);
+        function pop_regardcompteur_21(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+        }
+
+        function style_regardcompteur_21_0() {
+            return {
+                pane: 'pane_regardcompteur_21',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/AEP_REGARD.svg',
+            iconSize: [7.6, 7.6]
+        }),
+                interactive: true,
+            }
+        }
+        map.createPane('pane_regardcompteur_21');
+        map.getPane('pane_regardcompteur_21').style.zIndex = 421;
+        map.getPane('pane_regardcompteur_21').style['mix-blend-mode'] = 'normal';
+        var layer_regardcompteur_21 = new L.geoJson(json_regardcompteur_21, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_regardcompteur_21',
+            layerName: 'layer_regardcompteur_21',
+            pane: 'pane_regardcompteur_21',
+            onEachFeature: pop_regardcompteur_21,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.marker(latlng, style_regardcompteur_21_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_regardcompteur_21);
+        map.addLayer(layer_regardcompteur_21);
+        function pop_stationdepompage_22(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+        }
+
+        function style_stationdepompage_22_0() {
+            return {
+                pane: 'pane_stationdepompage_22',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/AEP_STATION_POMPAGE_STOCK.svg',
+            iconSize: [7.6, 7.6]
+        }),
+                interactive: true,
+            }
+        }
+        map.createPane('pane_stationdepompage_22');
+        map.getPane('pane_stationdepompage_22').style.zIndex = 422;
+        map.getPane('pane_stationdepompage_22').style['mix-blend-mode'] = 'normal';
+        var layer_stationdepompage_22 = new L.geoJson(json_stationdepompage_22, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_stationdepompage_22',
+            layerName: 'layer_stationdepompage_22',
+            pane: 'pane_stationdepompage_22',
+            onEachFeature: pop_stationdepompage_22,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.marker(latlng, style_stationdepompage_22_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_stationdepompage_22);
+        map.addLayer(layer_stationdepompage_22);
+        function pop_surpresseur_23(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+        }
+
+        function style_surpresseur_23_0() {
+            return {
+                pane: 'pane_surpresseur_23',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/Surpresseur.svg',
+            iconSize: [7.6, 7.6]
+        }),
+                interactive: true,
+            }
+        }
+        map.createPane('pane_surpresseur_23');
+        map.getPane('pane_surpresseur_23').style.zIndex = 423;
+        map.getPane('pane_surpresseur_23').style['mix-blend-mode'] = 'normal';
+        var layer_surpresseur_23 = new L.geoJson(json_surpresseur_23, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_surpresseur_23',
+            layerName: 'layer_surpresseur_23',
+            pane: 'pane_surpresseur_23',
+            onEachFeature: pop_surpresseur_23,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.marker(latlng, style_surpresseur_23_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_surpresseur_23);
+        map.addLayer(layer_surpresseur_23);
+        function pop_ventouse_24(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+        }
+
+        function style_ventouse_24_0() {
+            return {
+                pane: 'pane_ventouse_24',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/AEP_VENTOUSE.svg',
+            iconSize: [7.6, 7.6]
+        }),
+                interactive: true,
+            }
+        }
+        map.createPane('pane_ventouse_24');
+        map.getPane('pane_ventouse_24').style.zIndex = 424;
+        map.getPane('pane_ventouse_24').style['mix-blend-mode'] = 'normal';
+        var layer_ventouse_24 = new L.geoJson(json_ventouse_24, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_ventouse_24',
+            layerName: 'layer_ventouse_24',
+            pane: 'pane_ventouse_24',
+            onEachFeature: pop_ventouse_24,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.marker(latlng, style_ventouse_24_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_ventouse_24);
+        map.addLayer(layer_ventouse_24);
+        function pop_purge_25(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+        }
+
+        function style_purge_25_0() {
+            return {
+                pane: 'pane_purge_25',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/AEP_PURGE.svg',
+            iconSize: [13.68, 13.68]
+        }),
+                interactive: true,
+            }
+        }
+        map.createPane('pane_purge_25');
+        map.getPane('pane_purge_25').style.zIndex = 425;
+        map.getPane('pane_purge_25').style['mix-blend-mode'] = 'normal';
+        var layer_purge_25 = new L.geoJson(json_purge_25, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_purge_25',
+            layerName: 'layer_purge_25',
+            pane: 'pane_purge_25',
+            onEachFeature: pop_purge_25,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.marker(latlng, style_purge_25_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_purge_25);
+        map.addLayer(layer_purge_25);
+        function pop_reservoir_26(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+        }
+
+        function style_reservoir_26_0() {
+            return {
+                pane: 'pane_reservoir_26',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/AEP_RESERVOIR.svg',
+            iconSize: [7.6, 7.6]
+        }),
+                interactive: true,
+            }
+        }
+        map.createPane('pane_reservoir_26');
+        map.getPane('pane_reservoir_26').style.zIndex = 426;
+        map.getPane('pane_reservoir_26').style['mix-blend-mode'] = 'normal';
+        var layer_reservoir_26 = new L.geoJson(json_reservoir_26, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_reservoir_26',
+            layerName: 'layer_reservoir_26',
+            pane: 'pane_reservoir_26',
+            onEachFeature: pop_reservoir_26,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.marker(latlng, style_reservoir_26_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_reservoir_26);
+        map.addLayer(layer_reservoir_26);
+        var osmGeocoder = new L.Control.Geocoder({
+            collapsed: true,
+            position: 'topleft',
+            text: 'Search',
+            title: 'Testing'
+        }).addTo(map);
+        document.getElementsByClassName('leaflet-control-geocoder-icon')[0]
+        .className += ' fa fa-search';
+        document.getElementsByClassName('leaflet-control-geocoder-icon')[0]
+        .title += 'Search for a place';
+        var baseMaps = {};
+        L.control.layers(baseMaps,{'<img src="legend/reservoir_26.png" /> reservoir': layer_reservoir_26,'<img src="legend/purge_25.png" /> purge': layer_purge_25,'<img src="legend/ventouse_24.png" /> ventouse': layer_ventouse_24,'<img src="legend/surpresseur_23.png" /> surpresseur': layer_surpresseur_23,'<img src="legend/stationdepompage_22.png" /> station de pompage': layer_stationdepompage_22,'<img src="legend/regardcompteur_21.png" /> regard compteur': layer_regardcompteur_21,'<img src="legend/captagesource_20.png" /> captage source': layer_captagesource_20,'<img src="legend/compteurparc_19.png" /> compteur parc': layer_compteurparc_19,'<img src="legend/compteurdebranchement_18.png" /> compteur de branchement': layer_compteurdebranchement_18,'<img src="legend/compteurdetete_17.png" /> compteur de tete': layer_compteurdetete_17,'<img src="legend/vanneventouse_16.png" /> vanne ventouse': layer_vanneventouse_16,'<img src="legend/vannedebranchement_15.png" /> vanne de branchement': layer_vannedebranchement_15,'<img src="legend/vannedesectionnement_14.png" /> vanne de sectionnement': layer_vannedesectionnement_14,'<img src="legend/vannepurge_13.png" /> vanne purge': layer_vannepurge_13,'<img src="legend/vanneinversee_12.png" /> vanne inversee': layer_vanneinversee_12,'<img src="legend/bouchon_11.png" /> bouchon': layer_bouchon_11,'<img src="legend/manchonderaccordement_10.png" /> manchon de raccordement': layer_manchonderaccordement_10,'<img src="legend/manchon_9.png" /> manchon': layer_manchon_9,'<img src="legend/robinetarret_8.png" /> robinet arret': layer_robinetarret_8,'<img src="legend/Branchements_7.png" /> Branchements': layer_Branchements_7,'<img src="legend/Intercommunal_6.png" /> Intercommunal': layer_Intercommunal_6,'<img src="legend/Distribution_5.png" /> Distribution': layer_Distribution_5,'<img src="legend/Adduction_4.png" /> Adduction': layer_Adduction_4,'<img src="legend/vannePI_3.png" /> vanne PI': layer_vannePI_3,'<img src="legend/reserveincendie_2.png" /> reserve incendie': layer_reserveincendie_2,'<img src="legend/poteauincendie_1.png" /> poteau incendie': layer_poteauincendie_1,"Vue aérienne de Meuse 55 - 2018": layer_VueariennedeMeuse552018_0,}).addTo(map);
+        setBounds();
+        </script>
+    </body>
+</html>
